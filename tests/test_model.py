@@ -39,7 +39,7 @@ from cyclonedx.model import (
     XsUri,
 )
 from cyclonedx.model.bom_ref import BomRef
-from cyclonedx.model.contact import OrganizationalContact
+from cyclonedx.model.contact import OrganizationalContact, OrganizationalEntity, PostalAddress
 from cyclonedx.model.issue import IssueClassification, IssueType, IssueTypeSource
 from tests import reorder
 
@@ -461,6 +461,28 @@ class TestModelOrganizationalContact(TestCase):
         sorted_contacts = sorted(contacts)
         expected_contacts = reorder(contacts, expected_order)
         self.assertListEqual(sorted_contacts, expected_contacts)
+
+
+class TestModelOrganizationalEntity(TestCase):
+
+    def test_address_is_part_of_equality_and_hash(self) -> None:
+        a = OrganizationalEntity(name='a', address=PostalAddress(country='DE'))
+        b = OrganizationalEntity(name='a', address=PostalAddress(country='FR'))
+        self.assertNotEqual(a, b)
+        self.assertNotEqual(hash(a), hash(b))
+        self.assertEqual(
+            OrganizationalEntity(name='a', address=PostalAddress(country='DE')),
+            OrganizationalEntity(name='a', address=PostalAddress(country='DE')))
+        self.assertNotEqual(OrganizationalEntity(name='a'), a)
+        self.assertEqual(2, len({a, b}))
+
+    def test_sort_by_address(self) -> None:
+        entities = [
+            OrganizationalEntity(name='a', address=PostalAddress(country='FR')),
+            OrganizationalEntity(name='a', address=PostalAddress(country='DE')),
+            OrganizationalEntity(name='a'),
+        ]
+        self.assertListEqual(reorder(entities, [1, 0, 2]), sorted(entities))
 
 
 class TestModelXsUri(TestCase):
